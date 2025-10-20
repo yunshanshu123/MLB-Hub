@@ -8,11 +8,16 @@ const apiClient = axios.create({
 });
 
 export default {
-  // 让 getSchedule 接受一个日期字符串参数
   getSchedule(dateString) {
-    // 如果没有提供日期，就请求 /schedule
-    // 如果提供了日期，就请求 /schedule/YYYY-MM-DD
     const url = dateString ? `/schedule/${dateString}` : '/schedule';
     return apiClient.get(url);
+  },
+
+  searchData(query) {
+    return apiClient.get('/search', { 
+      params: { 
+        q: query 
+      } 
+    });
   }
 };
