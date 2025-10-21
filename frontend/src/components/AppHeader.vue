@@ -23,10 +23,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #002D72; /* MLB 官方蓝色 */
+  background-color: #002D72;
   color: white;
   padding: 10px 20px;
-  border-radius: 8px 8px 0 0; /* 圆角只应用于顶部 */
+  border-radius: 8px 8px 0 0;
 }
 
 .logo {
@@ -44,11 +44,10 @@ export default {
 }
 
 .navigation a:hover {
-  background-color: #041E42; /* 深一点的蓝色 */
+  background-color: #041E42;
 }
 
-/* 这个样式会高亮显示当前所在的路由链接 */
 .navigation a.router-link-exact-active {
-  background-color: #FA4616; /* MLB 官方橙色 */
+  background-color: #FA4616;
 }
 </style>

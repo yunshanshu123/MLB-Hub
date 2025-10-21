@@ -4,14 +4,15 @@
     <p class="subtitle">Search for MLB players or teams by name, or browse league leaders below.</p>
 
     <form @submit.prevent="performSearch" class="search-form">
-      <input 
-        type="text" 
-        v-model="query" 
-        placeholder="e.g., Aaron Judge or New York Yankees"
-        class="search-input"
-        required
-      >
-      <button type="button" v-if="query" @click="clearSearch" class="clear-button">×</button>
+      <div class="search-input-wrapper">
+        <input 
+          type="text" 
+          v-model="query" 
+          placeholder="e.g., Aaron Judge or New York Yankees"
+          class="search-input"
+        >
+        <button type="button" v-if="query" @click="clearSearch" class="clear-button">×</button>
+      </div>
       <button type="submit" :disabled="loading || !query.trim()">
         {{ loading ? 'Searching...' : 'Search' }}
       </button>
@@ -92,7 +93,7 @@
           </router-link>
         </div>
       </transition-group>
-      <div v-if="!loading && results.length === 0" class="no-results">
+      <div v-if="!loading && results.length === 0 && searched" class="no-results">
         No results found for "{{ lastQuery }}".
       </div>
     </div>
@@ -118,21 +119,42 @@ export default {
       }
     };
   },
-  created() { this.fetchLeaders(); },
+  created() {
+    this.fetchLeaders();
+    
+    const queryFromUrl = this.$route.query.q;
+    if (queryFromUrl) {
+      this.query = queryFromUrl;
+      this.performSearch();
+    }
+  },
   methods: {
     async performSearch() {
-      if (!this.query.trim() || this.loading) return;
+      const trimmedQuery = this.query.trim();
+      if (!trimmedQuery || this.loading) return;
+
       this.isSearching = true; this.loading = true; this.searched = true;
-      this.lastQuery = this.query; this.results = [];
+      this.lastQuery = trimmedQuery; this.results = [];
+
+      if (this.$route.query.q !== trimmedQuery) {
+        this.$router.replace({ query: { q: trimmedQuery } });
+      }
+
       try {
-        const response = await ApiService.searchData(this.query);
+        const response = await ApiService.searchData(trimmedQuery);
         this.results = response.data;
-      } catch (error) { console.error("Failed to perform search:", error); } 
+      } catch (error) { 
+        console.error("Failed to perform search:", error); 
+      } 
       finally { this.loading = false; }
     },
     clearSearch() {
       this.query = ''; this.isSearching = false;
       this.searched = false; this.results = [];
+      
+      if (this.$route.query.q) {
+        this.$router.replace({ query: {} });
+      }
     },
     async fetchLeaders() {
       this.leadersLoading = true; this.leadersError = null;
@@ -157,8 +179,34 @@ export default {
 .fade-in-enter-active, .fade-in-leave-active { transition: opacity 0.3s ease; }
 .fade-in-enter-from, .fade-in-leave-to { opacity: 0; }
 
-.search-form { position: relative; display: flex; justify-content: center; gap: 10px; }
-.clear-button { position: absolute; right: 130px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 1.5em; color: #aaa; cursor: pointer; padding: 0 10px; }
+.search-form { display: flex; justify-content: center; gap: 10px; align-items: flex-start; }
+
+.search-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.search-input { 
+  width: 400px; 
+  padding: 10px 40px 10px 15px;
+  font-size: 1rem; 
+  border: 1px solid #ccc; 
+  border-radius: 6px; 
+}
+
+.clear-button { 
+  position: absolute; 
+  right: 5px;
+  top: 50%; 
+  transform: translateY(-50%); 
+  background: transparent; 
+  border: none; 
+  font-size: 1.5em; 
+  color: #aaa; 
+  cursor: pointer; 
+  padding: 0 10px; 
+  height: 100%;
+}
 .clear-button:hover { color: #333; }
 
 .leaderboards-section h2 { text-align: center; margin-bottom: 20px; }
@@ -189,7 +237,6 @@ export default {
 @keyframes spin { to { transform: rotate(360deg); } }
 .data-view { text-align: center; }
 .subtitle { color: #666; margin-top: -10px; margin-bottom: 30px; }
-.search-input { width: 400px; padding: 10px 15px; font-size: 1rem; border: 1px solid #ccc; border-radius: 6px; }
 button[type="submit"] { padding: 10px 20px; font-size: 1rem; color: white; background-color: #002D72; border: none; border-radius: 6px; cursor: pointer; }
 .no-results { color: #888; padding: 40px 0; font-size: 1.1em; }
 .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; text-align: left; }

@@ -1,15 +1,19 @@
 <template>
   <div class="player-detail-view">
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Loading Player Data...</p>
+    <div class="view-header">
+      <a @click="goBack" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M400-80 0-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>
+        <span>Back</span>
+      </a>
     </div>
 
-    <div v-if="error" class="error-container">
-      <h2>Could not load player data.</h2>
-      <p>{{ error }}</p>
-      <a @click="goBack" class="back-link">← Go Back</a>
-    </div>
+    <LoadingIndicator v-if="loading" message="Loading Player Data..." />
+    <ErrorDisplay 
+      v-if="error" 
+      title="Could not load player data." 
+      :message="error" 
+      @goBack="goBack" 
+    />
 
     <transition name="fade-in">
       <div v-if="!loading && !error && player" class="player-content">
@@ -29,7 +33,6 @@
               <span>Born: {{ player.birthDate || 'N/A' }}</span>
             </div>
           </div>
-          <a @click="goBack" class="back-link header-back-link">← Back</a>
         </div>
 
         <div class="stats-section">
@@ -89,9 +92,15 @@
 
 <script>
 import ApiService from '@/services/ApiService.js';
+import LoadingIndicator from '@/components/LoadingIndicator.vue';
+import ErrorDisplay from '@/components/ErrorDisplay.vue';
 
 export default {
   name: 'PlayerDetailView',
+  components: {
+    LoadingIndicator,
+    ErrorDisplay
+  },
   data() {
     return {
       playerId: null,
@@ -157,16 +166,36 @@ export default {
 </script>
 
 <style scoped>
-/* --- 整体动画 --- */
 .fade-in-enter-active, .fade-in-leave-active { transition: opacity 0.5s ease; }
 .fade-in-enter-from, .fade-in-leave-to { opacity: 0; }
 
-.player-detail-view { background-color: #f0f2f5; min-height: 100vh; }
-.loading-container, .error-container { text-align: center; padding: 80px 20px; }
-.spinner { width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: #002D72; border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.player-detail-view { background-color: #f0f2f5; padding: 20px 40px; min-height: 100vh; }
 
-/* --- 头部样式 --- */
+.view-header {
+  margin-bottom: 20px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff;
+  color: #333;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.back-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.back-link svg {
+  fill: #333;
+}
+
 .player-header-background {
   height: 200px;
   background: linear-gradient(to right, #002D72, #041E42);
@@ -193,25 +222,9 @@ export default {
 .player-info { color: white; padding-bottom: 15px; }
 .jersey-number { font-size: 1.5em; font-weight: bold; color: rgba(255, 255, 255, 0.7); }
 .player-info h1 { margin: 0; font-size: 3em; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-/* ↓↓↓ 关键改动：将透明度从 0.9 改为 0.95，使其更不透明、更清晰 ↓↓↓ */
-.player-bio { display: flex; gap: 8px; color: rgba(255, 255, 255, 0.95); margin-top: 5px; font-weight: 500;}
+.player-bio { display: flex; gap: 8px; color: #333333; margin-top: 5px; font-weight: 500;}
 
-.back-link {
-  display: inline-block;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: background-color 0.3s;
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.back-link:hover { background-color: rgba(255, 255, 255, 0.2); }
-.header-back-link { position: absolute; top: -80px; right: 40px; padding: 8px 15px; font-size: 0.9em; }
-.error-container .back-link { margin-top: 20px; padding: 10px 20px; color: #333; background-color: #e9ecef; border: none; }
-
-/* --- 统计板块样式 --- */
-.stats-section { padding: 0 40px; }
+.stats-section { padding: 0; }
 .stats-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .season-selector { display: flex; align-items: center; gap: 10px; }
 .season-selector label { font-weight: bold; }

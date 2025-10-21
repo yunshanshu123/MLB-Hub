@@ -26,5 +26,8 @@ export default {
   },
   getTeamDetails(teamId) {
     return apiClient.get(`/team/${teamId}/details`);
+  },
+  getGameDetails(gameId) {
+    return apiClient.get(`/game/${gameId}/details`);
   }
 };

@@ -4,7 +4,6 @@ from config import Config
 
 MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
-# (此函数保持不变)
 def get_schedule_and_scores(date_str=None):
     if not date_str:
         date_str = datetime.today().strftime('%Y-%m-%d')
@@ -36,33 +35,38 @@ def get_schedule_and_scores(date_str=None):
         print(f"Error fetching data from MLB API: {e}")
         return []
 
-# (此函数保持不变)
 def search_mlb_data(query):
     processed_results = []
     try:
         player_search_url = f"{MLB_API_BASE}/people/search?names={query}"
         player_response = requests.get(player_search_url)
         player_response.raise_for_status()
+        
         players_data = player_response.json().get('people', [])
-        for basic_player_info in players_data:
-            player_id = basic_player_info.get('id')
-            if not player_id: continue
-            detailed_player_url = f"{MLB_API_BASE}/people/{player_id}?hydrate=currentTeam,primaryPosition"
-            detailed_response = requests.get(detailed_player_url)
+        player_ids = [str(player.get('id')) for player in players_data if player.get('id')]
+
+        if player_ids:
+            ids_string = ",".join(player_ids)
+            hydrate_params = "currentTeam,primaryPosition"
+            detailed_players_url = f"{MLB_API_BASE}/people?personIds={ids_string}&hydrate={hydrate_params}"
+            
+            detailed_response = requests.get(detailed_players_url)
             detailed_response.raise_for_status()
-            player_list = detailed_response.json().get('people', [])
-            if not player_list: continue
-            player = player_list[0]
-            team_info = player.get('currentTeam', {})
-            position_info = player.get('primaryPosition', {})
-            processed_results.append({
-                'id': f"player-{player['id']}", 'type': 'player',
-                'name': player.get('fullName', 'N/A'),
-                'photo': f"https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/{player['id']}/headshot/67/current",
-                'age': player.get('currentAge'),
-                'team': team_info.get('name'),
-                'position': position_info.get('abbreviation')
-            })
+            
+            detailed_players_list = detailed_response.json().get('people', [])
+            
+            for player in detailed_players_list:
+                team_info = player.get('currentTeam', {})
+                position_info = player.get('primaryPosition', {})
+                processed_results.append({
+                    'id': f"player-{player['id']}", 'type': 'player',
+                    'name': player.get('fullName', 'N/A'),
+                    'photo': f"https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/{player['id']}/headshot/67/current",
+                    'age': player.get('currentAge'),
+                    'team': team_info.get('name'),
+                    'position': position_info.get('abbreviation')
+                })
+
         all_teams_url = f"{MLB_API_BASE}/teams?sportId=1"
         team_response = requests.get(all_teams_url)
         team_response.raise_for_status()
@@ -79,12 +83,13 @@ def search_mlb_data(query):
                     'league': team.get('league', {}).get('name'),
                     'division': team.get('division', {}).get('name'),
                 })
+                
     except requests.exceptions.RequestException as e:
         print(f"Error fetching search data from MLB API: {e}")
         return {"error": f"Failed to fetch data from external provider. Details: {e}"}
+        
     return processed_results
 
-# (此函数保持不变)
 def get_player_stats(player_id):
     try:
         stats_url = f"{MLB_API_BASE}/people/{player_id}/stats?stats=yearByYear&group=hitting,pitching"
@@ -113,7 +118,6 @@ def get_player_stats(player_id):
         print(f"Error fetching player stats from MLB API: {e}")
         return {"error": "Failed to fetch player stats from the provider."}
 
-# (此函数保持不变)
 def get_player_details(player_id):
     try:
         detailed_player_url = f"{MLB_API_BASE}/people/{player_id}?hydrate=currentTeam,primaryPosition"
@@ -140,7 +144,6 @@ def get_player_details(player_id):
         print(f"Error fetching player details from MLB API: {e}")
         return {"error": "Failed to fetch player details from the provider."}
 
-# (此函数保持不变)
 def get_league_leaders():
     try:
         current_season = datetime.now().year
@@ -178,39 +181,6 @@ def get_league_leaders():
         print(f"Error fetching league leaders from MLB API: {e}")
         return {"error": "Failed to fetch league leaders from the provider."}
 
-def get_weather_for_city(city_name):
-    if not Config.OPENWEATHER_API_KEY:
-        print("Warning: OpenWeather API Key not configured.")
-        return None
-    
-    city_map = {
-        "NY Mets": "New York",
-        "NY Yankees": "New York",
-        "Chi Cubs": "Chicago",
-        "Chi White Sox": "Chicago",
-    }
-    search_city = city_map.get(city_name, city_name)
-
-    weather_url = ("https://api.openweathermap.org/data/2.5/weather"
-                   f"?q={search_city}&appid={Config.OPENWEATHER_API_KEY}&units=metric") # units=metric 表示摄氏度
-
-    try:
-        response = requests.get(weather_url)
-        response.raise_for_status()
-        data = response.json()
-        
-        weather_info = data.get('weather', [{}])[0]
-        main_info = data.get('main', {})
-        
-        return {
-            "temperature": round(main_info.get('temp')),
-            "description": weather_info.get('main'),
-            "icon": weather_info.get('icon')
-        }
-    except requests.exceptions.RequestException as e:
-        print(f"Could not fetch weather for city '{search_city}': {e}")
-        return None
-
 def get_team_details(team_id):
     try:
         team_info_url = f"{MLB_API_BASE}/teams/{team_id}"
@@ -221,10 +191,8 @@ def get_team_details(team_id):
         if not teams:
             return {"error": "Team not found."}
         team_data = teams[0]
-        
         city = team_data.get('locationName')
         team_name_for_map = team_data.get('teamName')
-
         roster_url = f"{MLB_API_BASE}/teams/{team_id}/roster"
         roster_response = requests.get(roster_url)
         roster_response.raise_for_status()
@@ -257,3 +225,97 @@ def get_team_details(team_id):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching team details from MLB API: {e}")
         return {"error": "Failed to fetch team details from the provider."}
+
+def get_weather_for_city(city_name):
+    if not Config.OPENWEATHER_API_KEY:
+        print("Warning: OpenWeather API Key not configured.")
+        return None
+    city_map = {
+        "NY Mets": "New York", "NY Yankees": "New York",
+        "Chi Cubs": "Chicago", "Chi White Sox": "Chicago",
+    }
+    search_city = city_map.get(city_name, city_name)
+    weather_url = ("https://api.openweathermap.org/data/2.5/weather"
+                   f"?q={search_city}&appid={Config.OPENWEATHER_API_KEY}&units=metric")
+    try:
+        response = requests.get(weather_url)
+        if response.status_code == 401:
+            print("Error: OpenWeather API Key is invalid or not yet active.")
+            return {"error": "Invalid Weather API Key"}
+        response.raise_for_status()
+        data = response.json()
+        weather_info = data.get('weather', [{}])[0]
+        main_info = data.get('main', {})
+        return {
+            "temperature": round(main_info.get('temp')),
+            "description": weather_info.get('main'),
+            "icon": weather_info.get('icon')
+        }
+    except requests.exceptions.RequestException as e:
+        print(f"Could not fetch weather for city '{search_city}': {e}")
+        return {"error": "Weather service unavailable"}
+
+def get_game_details(game_id):
+    try:
+        game_url_live = f"{MLB_API_BASE}/game/{game_id}/feed/live"
+        response = requests.get(game_url_live)
+
+        if response.status_code == 404:
+            game_url_context = f"{MLB_API_BASE}/game/{game_id}/contextMetrics"
+            linescore_url = f"{MLB_API_BASE}/game/{game_id}/linescore"
+            boxscore_url = f"{MLB_API_BASE}/game/{game_id}/boxscore"
+            
+            game_resp = requests.get(game_url_context)
+            game_resp.raise_for_status()
+            game_data = game_resp.json().get('game', {})
+            
+            linescore_resp = requests.get(linescore_url)
+            linescore_resp.raise_for_status()
+            linescore = linescore_resp.json()
+            
+            boxscore_resp = requests.get(boxscore_url)
+            boxscore_resp.raise_for_status()
+            boxscore = boxscore_resp.json().get('teams', {})
+        
+        else:
+            response.raise_for_status()
+            data = response.json()
+            live_data = data.get('liveData', {})
+            game_data = data.get('gameData', {})
+            linescore = live_data.get('linescore', {})
+            boxscore = live_data.get('boxscore', {}).get('teams', {})
+
+        players_data = { "away": [], "home": [] }
+        for team in ["away", "home"]:
+            team_players = boxscore.get(team, {}).get('players', {})
+            for player_id_key, player_stats in team_players.items():
+                players_data[team].append({
+                    "id": player_stats.get('person', {}).get('id'),
+                    "name": player_stats.get('person', {}).get('fullName'),
+                    "jerseyNumber": player_stats.get('jerseyNumber', '-'),
+                    "position": player_stats.get('position', {}).get('abbreviation'),
+                    "stats": {
+                        "batting": player_stats.get('stats', {}).get('batting', {}),
+                        "pitching": player_stats.get('stats', {}).get('pitching', {})
+                    }
+                })
+        
+        away_team_box_info = boxscore.get('away', {}).get('team', {})
+        home_team_box_info = boxscore.get('home', {}).get('team', {})
+
+        return {
+            "status": game_data.get('status', {}).get('detailedState', 'Final'),
+            "venue": game_data.get('venue', {}).get('name'),
+            "away_team": away_team_box_info.get('name'),
+            "home_team": home_team_box_info.get('name'),
+            "away_logo": f"https://www.mlbstatic.com/team-logos/{away_team_box_info.get('id')}.svg",
+            "home_logo": f"https://www.mlbstatic.com/team-logos/{home_team_box_info.get('id')}.svg",
+            "linescore": linescore,
+            "players": players_data,
+            "away_team_id": away_team_box_info.get('id'),
+            "home_team_id": home_team_box_info.get('id')
+        }
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching game details from MLB API: {e}")
+        return {"error": "Failed to fetch game details from the provider."}

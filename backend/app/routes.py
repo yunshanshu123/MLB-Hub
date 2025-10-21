@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from .services import (get_schedule_and_scores, search_mlb_data, get_player_stats, 
-                       get_player_details, get_league_leaders, get_team_details)
+                       get_player_details, get_league_leaders, get_team_details,
+                       get_game_details) 
 from datetime import datetime
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -48,10 +49,17 @@ def league_leaders():
 
 @api_bp.route('/team/<int:team_id>/details', methods=['GET'])
 def team_details(team_id):
-    """
-    根据球队ID获取其详细信息和阵容。
-    """
     details = get_team_details(team_id)
     if 'error' in details:
-        return jsonify(details), 404 # 如果找不到球队，返回 404
+        return jsonify(details), 404
+    return jsonify(details)
+
+@api_bp.route('/game/<int:game_id>/details', methods=['GET'])
+def game_details(game_id):
+    """
+    根据比赛ID获取其详细信息。
+    """
+    details = get_game_details(game_id)
+    if 'error' in details:
+        return jsonify(details), 500
     return jsonify(details)

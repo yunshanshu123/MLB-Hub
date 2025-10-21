@@ -1,12 +1,19 @@
 <template>
   <div class="team-detail-view">
-    <div v-if="loading" class="loading-container">
-      <div class="spinner"></div><p>Loading Team Data...</p>
+    <div class="view-header">
+      <a @click="goBack" class="back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M400-80 0-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>
+        <span>Back</span>
+      </a>
     </div>
-    <div v-if="error" class="error-container">
-      <h2>Could not load team data.</h2><p>{{ error }}</p>
-      <a @click="goBack" class="back-link dark">← Go Back</a>
-    </div>
+
+    <LoadingIndicator v-if="loading" message="Loading Team Data..." />
+    <ErrorDisplay 
+      v-if="error" 
+      title="Could not load team data." 
+      :message="error" 
+      @goBack="goBack" 
+    />
 
     <transition name="fade-in">
       <div v-if="!loading && !error && team" class="team-content">
@@ -29,7 +36,6 @@
               <span class="weather-desc">{{ team.weather.description }}</span>
             </div>
           </div>
-          <a @click="goBack" class="back-link dark header-back-link">← Back</a>
         </div>
 
         <div class="roster-section white-card">
@@ -53,6 +59,8 @@
 
 <script>
 import ApiService from '@/services/ApiService.js';
+import LoadingIndicator from '@/components/LoadingIndicator.vue';
+import ErrorDisplay from '@/components/ErrorDisplay.vue';
 
 const OWM_ICON_MAP = {
   '01d': 'wi-day-sunny', '01n': 'wi-night-clear',
@@ -68,6 +76,10 @@ const OWM_ICON_MAP = {
 
 export default {
   name: 'TeamDetailView',
+  components: {
+    LoadingIndicator,
+    ErrorDisplay
+  },
   data() {
     return {
       teamId: null,
@@ -80,7 +92,7 @@ export default {
     weatherIconClass() {
       if (this.team && this.team.weather && this.team.weather.icon) {
         const iconCode = this.team.weather.icon;
-        return ['wi', OWM_ICON_MAP[iconCode] || 'wi-na']; // 'wi-na' 是一个备用图标
+        return ['wi', OWM_ICON_MAP[iconCode] || 'wi-na'];
       }
       return 'wi-na';
     }
@@ -119,12 +131,34 @@ export default {
 <style scoped>
 .fade-in-enter-active, .fade-in-leave-active { transition: opacity 0.5s ease; }
 .fade-in-enter-from, .fade-in-leave-to { opacity: 0; }
-.loading-container, .error-container { text-align: center; padding: 80px 20px; }
-.spinner { width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: #002D72; border-radius: 50%; margin: 0 auto 20px; animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-.team-detail-view { background-color: #f0f2f5; padding: 30px; }
+.team-detail-view { background-color: #f0f2f5; padding: 20px 40px; min-height: 100vh; }
 .white-card { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
+
+.view-header {
+  margin-bottom: 20px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff;
+  color: #333;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.back-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.back-link svg {
+  fill: #333;
+}
 
 .team-header { display: flex; align-items: center; gap: 25px; position: relative; }
 .team-logo-large { width: 120px; height: 120px; object-fit: contain; }
@@ -142,11 +176,6 @@ export default {
 .weather-info { display: flex; flex-direction: column; text-align: left; }
 .weather-temp { font-size: 1.5em; font-weight: bold; color: #212529; }
 .weather-desc { font-size: 0.9em; color: #6c757d; text-transform: capitalize; }
-
-.back-link.dark { background-color: #e9ecef; color: #333; text-decoration: none; border-radius: 6px; transition: background-color 0.3s; cursor: pointer; }
-.back-link.dark:hover { background-color: #dee2e6; }
-.header-back-link { position: absolute; top: 25px; right: 25px; padding: 8px 15px; font-size: 0.9em; }
-.error-container .back-link { margin-top: 20px; padding: 10px 20px; }
 
 .roster-section h2 { font-size: 1.8em; margin-bottom: 20px; text-align: center; }
 .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
