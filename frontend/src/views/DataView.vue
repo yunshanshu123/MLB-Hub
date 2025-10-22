@@ -1,5 +1,14 @@
 <template>
   <div class="data-view">
+    <div class="search-background">
+      <div 
+        v-for="(image, index) in backgroundImages" 
+        :key="index"
+        :class="['background-image', { active: currentBackground === index }]"
+        :style="{ backgroundImage: `url(${getImageUrl(image)})` }"
+      ></div>
+    </div>
+
     <h1>Data Search</h1>
     <p class="subtitle">Search for MLB players or teams by name, or browse league leaders below.</p>
 
@@ -116,7 +125,19 @@ export default {
         onBasePlusSlugging: 'OPS', hits: 'Hits', runs: 'Runs',
         earnedRunAverage: 'ERA', wins: 'Wins', strikeouts: 'Strikeouts',
         walksAndHitsPerInningPitched: 'WHIP', saves: 'Saves', inningsPitched: 'Innings'
-      }
+      },
+      backgroundImages: [
+        'Ohtanihitter.jpg',
+        'Judge.jpg',
+        'Raleigh.jpg',
+        'Schwarber.jpg',
+        'Ohtanipitcher.jpg',
+        'Skenes.jpg',
+        'Skubal.jpg',
+        'Snell.jpg'
+      ],
+      currentBackground: 0,
+      backgroundInterval: null
     };
   },
   created() {
@@ -127,6 +148,12 @@ export default {
       this.query = queryFromUrl;
       this.performSearch();
     }
+  },
+  mounted() {
+    this.startBackgroundRotation();
+  },
+  beforeUnmount() {
+    this.stopBackgroundRotation();
   },
   methods: {
     async performSearch() {
@@ -170,12 +197,93 @@ export default {
       if (rank === 3) return 'rank-bronze';
       return 'rank-normal';
     },
-    imageError(event) { event.target.src = 'https://www.mlbstatic.com/team-logos/league/1.svg'; }
+    imageError(event) { event.target.src = 'https://www.mlbstatic.com/team-logos/league/1.svg'; },
+    
+    getImageUrl(imageName) {
+      return require(`@/assets/background/${imageName}`);
+    },
+    startBackgroundRotation() {
+      this.backgroundInterval = setInterval(() => {
+        this.currentBackground = (this.currentBackground + 1) % this.backgroundImages.length;
+      }, 5000); // 5秒切换一次
+    },
+    stopBackgroundRotation() {
+      if (this.backgroundInterval) {
+        clearInterval(this.backgroundInterval);
+        this.backgroundInterval = null;
+      }
+    }
   }
 };
 </script>
 
 <style scoped>
+.data-view {
+  position: relative;
+  min-height: 100vh;
+}
+
+.search-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+  max-height: 600px;
+  min-height: 400px;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.background-image.active {
+  opacity: 0.6; 
+}
+
+.search-form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 0; /* 去掉上边距 */
+  height: 60vh; /* 与背景相同高度 */
+  max-height: 600px;
+  min-height: 400px;
+  align-items: center; /* 垂直居中 */
+}
+
+h1 {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  margin: 0; 
+  text-align: center; 
+}
+
+.subtitle {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  margin: 10px 0 30px 0; 
+  text-align: center; 
+}
+
 .fade-in-enter-active, .fade-in-leave-active { transition: opacity 0.3s ease; }
 .fade-in-enter-from, .fade-in-leave-to { opacity: 0; }
 
@@ -230,13 +338,16 @@ export default {
 .rank-bronze .player-rank { color: #CD7F32; }
 .rank-normal .player-rank { color: #6c757d; }
 
-.divider { border: none; border-top: 1px solid #e0e0e0; margin: 30px 0; }
+.divider { border: none; border-top: 1px solid #e0e0e0; margin: 0; }
 .loading-message { display: flex; align-items: center; justify-content: center; gap: 15px; color: #888; padding: 20px 0; font-size: 1.1em; }
 .error-message { text-align: center; color: #d9534f; padding: 20px 0; }
 .spinner { width: 24px; height: 24px; border: 3px solid #ccc; border-top-color: #002D72; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .data-view { text-align: center; }
-.subtitle { color: #666; margin-top: -10px; margin-bottom: 30px; }
+.subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
 button[type="submit"] { padding: 10px 20px; font-size: 1rem; color: white; background-color: #002D72; border: none; border-radius: 6px; cursor: pointer; }
 .no-results { color: #888; padding: 40px 0; font-size: 1.1em; }
 .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; text-align: left; }
