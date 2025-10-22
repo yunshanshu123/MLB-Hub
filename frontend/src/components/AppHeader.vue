@@ -1,7 +1,8 @@
 <template>
   <header class="app-header">
     <div class="logo">
-      ⚾ MLB Hub
+      <img src="@/assets/mlb-logo.jpg" alt="MLB Logo" class="header-logo">
+      <span>MLB Hub</span>
     </div>
     <nav class="navigation">
       <router-link to="/">Schedule</router-link>
@@ -30,11 +31,20 @@ export default {
 }
 
 .logo {
+  display: flex;
+  align-items: center;
   font-size: 1.5em;
   font-weight: bold;
 }
 
+.header-logo {
+  height: 35px;
+  width: auto;
+  margin-right: 12px;
+}
+
 .navigation a {
+  position: relative; 
   color: white;
   text-decoration: none;
   margin-left: 20px;
@@ -49,5 +59,27 @@ export default {
 
 .navigation a.router-link-exact-active {
   background-color: #FA4616;
+}
+
+.navigation a.router-link-exact-active::before {
+  content: '⚾'; 
+  position: absolute; 
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop-in {
+  0% {
+    transform: translateY(-50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
 }
 </style>

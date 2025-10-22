@@ -319,3 +319,90 @@ def get_game_details(game_id):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching game details from MLB API: {e}")
         return {"error": "Failed to fetch game details from the provider."}
+
+MLB_TEAM_KEYWORDS = [
+    'd-backs', 'diamondbacks', 'braves', 'orioles', 'red sox', 'cubs', 'white sox', 
+    'reds', 'guardians', 'rockies', 'tigers', 'astros', 'royals', 'angels', 
+    'dodgers', 'marlins', 'brewers', 'twins', 'mets', 'yankees', 'athletics', 
+    'a\'s', 'phillies', 'pirates', 'padres', 'giants', 'mariners', 'cardinals', 
+    'rays', 'rangers', 'blue jays', 'nationals'
+]
+MLB_SUPERSTAR_KEYWORDS = [
+    'ohtani', 'judge', 'trout', 'soto', 'betts', 'acuna',  'raleigh', 'springer', 
+    'freeman', 'harper', 'kershaw', 'degrom', 'scherzer', 'verlander', 'cole', 'schwarber', 
+    'skenes', 'skubal', 'duran', 'snell', 'yamamoto'
+]
+MLB_JARGON_KEYWORDS = [
+    'pitcher', 'catcher', 'infielder', 'outfielder', 'hitter', 'batter', 'bullpen',
+    'strikeout', 'home run', 'grand slam', 'no-hitter', 'perfect game', 'inning',
+    'dugout', 'umpire', 'world series', 'cy young', 'double play'
+]
+MLB_GENERAL_KEYWORDS = [
+    'playoffs', 'all-star', 'mvp', 'championship', 'division series'
+]
+COMPETITOR_LEAGUE_KEYWORDS = [
+    'nfl', 'nba', 'nhl', 'pga', 'nascar', 'mls', 'premier league', 'f1', 'formula 1'
+]
+
+def get_mlb_news(page=1, per_page=20):
+    if not Config.NEWSAPI_KEY:
+        print("Warning: NewsAPI Key not configured.")
+        return {"error": "News service is not configured on the server."}
+
+    news_api_url = "https://newsapi.org/v2/everything"
+    sources = "espn,fox-sports,cbs-sports,bleacher-report,nbc-sports"
+    params = {
+        'q': '"MLB" OR "baseball"', 'apiKey': Config.NEWSAPI_KEY,
+        'sources': sources, 'sortBy': 'publishedAt',
+        'pageSize': 100, 'language': 'en'
+    }
+
+    try:
+        response = requests.get(news_api_url, params=params)
+        response.raise_for_status()
+        articles = response.json().get('articles', [])
+        
+        scored_articles = []
+        for article in articles:
+            if not article.get('content') or article.get('title') == '[Removed]':
+                continue
+
+            title = article.get('title', '').lower()
+            description = article.get('description', '').lower()
+            content_to_check = title + " " + description
+
+            score = 0
+            if any(keyword in content_to_check for keyword in MLB_TEAM_KEYWORDS): score += 4
+            if 'mlb' in content_to_check or 'major league baseball' in content_to_check: score += 3
+            if any(keyword in content_to_check for keyword in MLB_SUPERSTAR_KEYWORDS): score += 3
+            if any(keyword in content_to_check for keyword in MLB_JARGON_KEYWORDS): score += 2
+            if any(keyword in content_to_check for keyword in MLB_GENERAL_KEYWORDS): score += 1
+            if any(keyword in title for keyword in COMPETITOR_LEAGUE_KEYWORDS): score -= 3
+
+            if score >= 1:
+                processed_article = {
+                    'id': article.get('url'), 'title': article.get('title'),
+                    'url': article.get('url'), 'date': article.get('publishedAt'),
+                    'summary': article.get('description'), 'thumbnail': article.get('urlToImage')
+                }
+                scored_articles.append({'article': processed_article, 'score': score})
+
+        scored_articles.sort(key=lambda x: x['score'], reverse=True)
+        top_40_articles = [item['article'] for item in scored_articles[:40]]
+
+        top_40_articles.sort(key=lambda x: x['date'], reverse=True)
+
+        total_results = len(top_40_articles)
+        start_index = (page - 1) * per_page
+        end_index = start_index + per_page
+        paginated_articles = top_40_articles[start_index:end_index]
+        has_more = end_index < total_results
+
+        return {
+            "articles": paginated_articles, "page": page,
+            "totalResults": total_results, "hasMore": has_more
+        }
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching news from NewsAPI: {e}")
+        return {"error": "Failed to fetch news from the provider."}

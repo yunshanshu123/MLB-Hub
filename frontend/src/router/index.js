@@ -4,17 +4,15 @@ import DataView from '../views/DataView.vue'
 import PlayerDetailView from '../views/PlayerDetailView.vue'
 import TeamDetailView from '../views/TeamDetailView.vue'
 import GameDetailView from '../views/GameDetailView.vue'
+import NewsView from '../views/NewsView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
   { path: '/data', name: 'data', component: DataView },
   { path: '/player/:id', name: 'playerDetail', component: PlayerDetailView },
   { path: '/team/:id', name: 'teamDetail', component: TeamDetailView },
-  {
-    path: '/game/:id',
-    name: 'gameDetail',
-    component: GameDetailView
-  }
+  { path: '/game/:id', name: 'gameDetail', component: GameDetailView },
+  { path: '/news', name: 'news', component: NewsView }
 ]
 
 const router = createRouter({

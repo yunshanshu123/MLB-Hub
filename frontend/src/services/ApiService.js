@@ -29,5 +29,8 @@ export default {
   },
   getGameDetails(gameId) {
     return apiClient.get(`/game/${gameId}/details`);
+  },
+  getNews(page = 1) {
+    return apiClient.get('/news', { params: { page } });
   }
 };
