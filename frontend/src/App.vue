@@ -2,9 +2,9 @@
   <div class="app-container">
     <AppHeader />
     <main class="main-content">
-      <router-view v-slot="{ Component }">
-        <keep-alive :include="['DataView', 'HomeView', 'GameDetailView', 'TeamDetailView']">
-          <component :is="Component" />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive :include="['DataView', 'HomeView']">
+          <component :is="Component" :key="route.fullPath" />
         </keep-alive>
       </router-view>
     </main>
@@ -23,7 +23,6 @@ export default {
 </script>
 
 <style>
-/* 将一些全局样式放在这里 */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

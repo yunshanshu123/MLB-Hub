@@ -9,23 +9,25 @@
       ></div>
     </div>
 
-    <h1>Data Search</h1>
-    <p class="subtitle">Search for MLB players or teams by name, or browse league leaders below.</p>
+    <div class="search-container">
+      <h1>Data Search</h1>
+      <p class="subtitle">Search for MLB players or teams by name, or browse league leaders below.</p>
 
-    <form @submit.prevent="performSearch" class="search-form">
-      <div class="search-input-wrapper">
-        <input 
-          type="text" 
-          v-model="query" 
-          placeholder="e.g., Aaron Judge or New York Yankees"
-          class="search-input"
-        >
-        <button type="button" v-if="query" @click="clearSearch" class="clear-button">×</button>
-      </div>
-      <button type="submit" :disabled="loading || !query.trim()">
-        {{ loading ? 'Searching...' : 'Search' }}
-      </button>
-    </form>
+      <form @submit.prevent="performSearch" class="search-form">
+        <div class="search-input-wrapper">
+          <input 
+            type="text" 
+            v-model="query" 
+            placeholder="e.g., Aaron Judge or New York Yankees"
+            class="search-input"
+          >
+          <button type="button" v-if="query" @click="clearSearch" class="clear-button">×</button>
+        </div>
+        <button type="submit" :disabled="loading || !query.trim()">
+          {{ loading ? 'Searching...' : 'Search' }}
+        </button>
+      </form>
+    </div>
     
     <hr class="divider">
 
@@ -205,7 +207,7 @@ export default {
     startBackgroundRotation() {
       this.backgroundInterval = setInterval(() => {
         this.currentBackground = (this.currentBackground + 1) % this.backgroundImages.length;
-      }, 5000); // 5秒切换一次
+      }, 5000);
     },
     stopBackgroundRotation() {
       if (this.backgroundInterval) {
@@ -242,7 +244,10 @@ export default {
   width: 100%;
   height: 100%;
   background-size: cover;
-  background-position: center;
+  /* ▼▼▼ 这是关键修改 ▼▼▼ */
+  /* 从 center 改为 center 20%，优先显示图片的上半部分，防止球员头部被裁切 */
+  background-position: center 20%; 
+  /* ▲▲▲ 这是关键修改 ▲▲▲ */
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 1.5s ease-in-out;
@@ -252,23 +257,22 @@ export default {
   opacity: 0.6; 
 }
 
-.search-form {
+.search-container {
   position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  align-items: flex-start;
-  margin-top: 0; /* 去掉上边距 */
-  height: 60vh; /* 与背景相同高度 */
+  width: 100%;
+  height: 60vh;
   max-height: 600px;
   min-height: 400px;
-  align-items: center; /* 垂直居中 */
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 h1 {
-  position: relative;
-  z-index: 1;
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   margin: 0; 
@@ -276,18 +280,21 @@ h1 {
 }
 
 .subtitle {
-  position: relative;
-  z-index: 1;
   color: rgba(255, 255, 255, 0.9);
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   margin: 10px 0 30px 0; 
   text-align: center; 
 }
 
+.search-form {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .fade-in-enter-active, .fade-in-leave-active { transition: opacity 0.3s ease; }
 .fade-in-enter-from, .fade-in-leave-to { opacity: 0; }
-
-.search-form { display: flex; justify-content: center; gap: 10px; align-items: flex-start; }
 
 .search-input-wrapper {
   position: relative;
@@ -317,6 +324,12 @@ h1 {
 }
 .clear-button:hover { color: #333; }
 
+.leaderboards-section,
+.search-results-section {
+  margin-top: 40px;
+  padding: 0 20px 40px;
+}
+
 .leaderboards-section h2 { text-align: center; margin-bottom: 20px; }
 .leaderboard-tabs { display: flex; justify-content: center; margin-bottom: 20px; background-color: #e9ecef; border-radius: 8px; padding: 4px; width: fit-content; margin-left: auto; margin-right: auto; }
 .leaderboard-tabs button { padding: 8px 25px; font-size: 1.1em; border: none; background-color: transparent; color: #555; border-radius: 6px; cursor: pointer; transition: all 0.3s; font-weight: 500; }
@@ -344,10 +357,6 @@ h1 {
 .spinner { width: 24px; height: 24px; border: 3px solid #ccc; border-top-color: #002D72; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .data-view { text-align: center; }
-.subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
 button[type="submit"] { padding: 10px 20px; font-size: 1rem; color: white; background-color: #002D72; border: none; border-radius: 6px; cursor: pointer; }
 .no-results { color: #888; padding: 40px 0; font-size: 1.1em; }
 .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; text-align: left; }

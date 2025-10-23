@@ -1,9 +1,12 @@
 <template>
   <header class="app-header">
-    <div class="logo">
-      <img src="@/assets/mlb-logo.jpg" alt="MLB Logo" class="header-logo">
-      <span>MLB Hub</span>
-    </div>
+    <router-link to="/" class="logo-link">
+      <div class="logo">
+        <img src="@/assets/mlb-logo.jpg" alt="MLB Hub Logo" class="header-logo">
+        <span>MLB Hub</span>
+      </div>
+    </router-link>
+    
     <nav class="navigation">
       <router-link to="/">Schedule</router-link>
       <router-link to="/data">Data</router-link>
@@ -28,6 +31,16 @@ export default {
   color: white;
   padding: 10px 20px;
   border-radius: 8px 8px 0 0;
+}
+
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.logo-link:hover {
+  opacity: 0.85;
 }
 
 .logo {

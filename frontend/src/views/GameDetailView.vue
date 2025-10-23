@@ -8,10 +8,11 @@
     </div>
 
     <LoadingIndicator v-if="loading" message="Loading Game Details..." />
+    
     <ErrorDisplay 
       v-if="error" 
-      title="Could not load game data." 
-      :message="error" 
+      title="Game Data Unavailable" 
+      message="Detailed statistics may not be available for games that have not yet started or were canceled." 
       @goBack="goBack" 
     />
 
@@ -114,6 +115,7 @@ export default {
       error: null,
     };
   },
+
   computed: {
     awayPlayers() {
       if (!this.game || !this.game.players) return [];
@@ -143,10 +145,13 @@ export default {
       this.error = null;
       try {
         const response = await ApiService.getGameDetails(this.gameId);
+        if (!response.data || !response.data.linescore) {
+            throw new Error("Incomplete game data received from API.");
+        }
         this.game = response.data;
       } catch (err) {
         console.error("Failed to fetch game data:", err);
-        this.error = err.response?.data?.error || "An unknown error occurred.";
+        this.error = "Detailed statistics may not be available for games that have not yet started or were canceled.";
       } finally {
         this.loading = false;
       }
