@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from .services import (get_schedule_and_scores, search_mlb_data, get_player_stats, 
                        get_player_details, get_league_leaders, get_team_details,
-                       get_game_details, get_mlb_news)
+                       get_game_details, get_mlb_news, get_youtube_highlights)
 from datetime import datetime
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -66,11 +66,16 @@ def get_news():
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
-        page = 1
-        
+        page = 1   
     news_data = get_mlb_news(page=page)
-
     if 'error' in news_data:
         return jsonify(news_data), 503
-        
     return jsonify(news_data)
+
+@api_bp.route('/highlights', methods=['GET'])
+def get_highlights():
+    query = request.args.get('q', None) 
+    videos = get_youtube_highlights(query=query)
+    if 'error' in videos:
+        return jsonify(videos), 503
+    return jsonify(videos)

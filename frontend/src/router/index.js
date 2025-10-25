@@ -5,6 +5,7 @@ import PlayerDetailView from '../views/PlayerDetailView.vue'
 import TeamDetailView from '../views/TeamDetailView.vue'
 import GameDetailView from '../views/GameDetailView.vue'
 import NewsView from '../views/NewsView.vue'
+import HighlightsView from '../views/HighlightsView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -12,7 +13,8 @@ const routes = [
   { path: '/player/:id', name: 'playerDetail', component: PlayerDetailView },
   { path: '/team/:id', name: 'teamDetail', component: TeamDetailView },
   { path: '/game/:id', name: 'gameDetail', component: GameDetailView },
-  { path: '/news', name: 'news', component: NewsView }
+  { path: '/news', name: 'news', component: NewsView },
+  { path: '/highlights', name: 'highlights', component: HighlightsView }
 ]
 
 const router = createRouter({

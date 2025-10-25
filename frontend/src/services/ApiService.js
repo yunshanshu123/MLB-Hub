@@ -32,5 +32,12 @@ export default {
   },
   getNews(page = 1) {
     return apiClient.get('/news', { params: { page } });
+  },
+  getHighlights(query) {
+    let url = '/highlights';
+    if (query) {
+      url += `?q=${encodeURIComponent(query)}`;
+    }
+    return apiClient.get(url);
   }
 };

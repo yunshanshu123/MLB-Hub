@@ -406,3 +406,48 @@ def get_mlb_news(page=1, per_page=20):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching news from NewsAPI: {e}")
         return {"error": "Failed to fetch news from the provider."}
+
+def get_youtube_highlights(query=None):
+    if not Config.YOUTUBE_API_KEY:
+        print("Warning: YouTube API Key not configured.")
+        return {"error": "Video service is not configured on the server."}
+
+    youtube_api_url = "https://www.googleapis.com/youtube/v3/search"
+    
+    search_term = ""
+    if query:
+        search_term = f"MLB {query}"
+    else:
+        search_term = "MLB Highlights"
+
+    params = {
+        'key': Config.YOUTUBE_API_KEY,
+        'part': 'snippet',
+        'q': search_term,
+        'type': 'video',
+        'maxResults': 12,
+        'order': 'relevance'
+    }
+
+    try:
+        response = requests.get(youtube_api_url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        processed_videos = []
+        for item in data.get('items', []):
+            snippet = item.get('snippet', {})
+            video_id = item.get('id', {}).get('videoId')
+            if video_id:
+                processed_videos.append({
+                    'videoId': video_id,
+                    'title': snippet.get('title'),
+                    'thumbnailUrl': snippet.get('thumbnails', {}).get('high', {}).get('url'),
+                    'publishedAt': snippet.get('publishedAt')
+                })
+            
+        return processed_videos
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching videos from YouTube API: {e.response.text if e.response else e}")
+        return {"error": "Failed to fetch videos from the provider."}
