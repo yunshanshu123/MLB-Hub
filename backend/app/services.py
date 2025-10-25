@@ -451,3 +451,47 @@ def get_youtube_highlights(query=None):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching videos from YouTube API: {e.response.text if e.response else e}")
         return {"error": "Failed to fetch videos from the provider."}
+    
+def get_league_standings(season=None):
+    if not season:
+        season = datetime.now().year
+        
+    url = f"{MLB_API_BASE}/standings?leagueId=103,104&season={season}"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        processed_standings = []
+        for record in data.get('records', []):
+            division_name = record.get('division', {}).get('name')
+            league_name = record.get('league', {}).get('name')
+            
+            teams_in_division = []
+            for team_entry in record.get('teamRecords', []):
+                team_info = team_entry.get('team', {})
+                league_record = team_entry.get('leagueRecord', {})
+                teams_in_division.append({
+                    'id': team_info.get('id'),
+                    'name': team_info.get('name'),
+                    'logo': f"https://www.mlbstatic.com/team-logos/{team_info.get('id')}.svg",
+                    'wins': league_record.get('wins', 0),
+                    'losses': league_record.get('losses', 0),
+                    'pct': league_record.get('pct', '.000'),
+                    'gb': team_entry.get('gamesBack', '--'),
+                    'streak': team_entry.get('streak', {}).get('streakCode', '-')
+                })
+            
+            processed_standings.append({
+                'league': league_name,
+                'division': division_name,
+                'teams': teams_in_division
+            })
+            
+        return processed_standings
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching standings from MLB API: {e}")
+        return {"error": "Failed to fetch league standings from the provider."}
+

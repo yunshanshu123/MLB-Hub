@@ -3,10 +3,6 @@
     <h2>{{ title }}</h2>
     <p v-if="message">{{ message }}</p>
     
-    <!-- 
-      我们使用 $emit 将点击事件传递给父组件，
-      而不是直接调用 this.$router。这让组件更具通用性。
-    -->
     <a @click="$emit('goBack')" class="back-link" v-if="showBackButton">
       <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M400-80 0-480l400-400 71 71-329 329 329 329-71 71Z"/></svg>
       <span>Back</span>
@@ -31,7 +27,7 @@ export default {
       default: true
     }
   },
-  emits: ['goBack'] // 明确声明组件会触发的事件
+  emits: ['goBack']
 }
 </script>
 

@@ -39,5 +39,8 @@ export default {
       url += `?q=${encodeURIComponent(query)}`;
     }
     return apiClient.get(url);
+  },
+  getStandings() {
+    return apiClient.get('/standings');
   }
 };

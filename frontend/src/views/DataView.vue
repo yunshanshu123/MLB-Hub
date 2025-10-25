@@ -244,10 +244,7 @@ export default {
   width: 100%;
   height: 100%;
   background-size: cover;
-  /* ▼▼▼ 这是关键修改 ▼▼▼ */
-  /* 从 center 改为 center 20%，优先显示图片的上半部分，防止球员头部被裁切 */
   background-position: center 20%; 
-  /* ▲▲▲ 这是关键修改 ▲▲▲ */
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 1.5s ease-in-out;
